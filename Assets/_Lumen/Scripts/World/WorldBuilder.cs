@@ -40,7 +40,7 @@ namespace Lumen
             var res = LumenResources.I;
 
             if (crystalMesh == null) crystalMesh = MeshFactory.Crystal(0.45f, 0.85f);
-            if (sentinelMesh == null) sentinelMesh = MeshFactory.Crystal(0.9f, 1.1f);
+            if (sentinelMesh == null) sentinelMesh = MeshFactory.Dragon();
             if (discMesh == null) discMesh = MeshFactory.Disc(1f);
 
             // ---- terrain ----
