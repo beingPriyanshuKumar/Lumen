@@ -17,7 +17,7 @@ namespace Lumen
 
         public State Current { get; private set; } = State.Patrol;
         public Vector3 Forward => transform.forward;
-        public Bounds WorldBounds => new Bounds(transform.position, new Vector3(2f, 2.6f, 2f));
+        public Bounds WorldBounds => new Bounds(transform.position, new Vector3(4f, 3f, 5f));
         public float SightRange => sightRange;
         public float SightHalfAngle => sightHalfAngle;
 
@@ -25,7 +25,7 @@ namespace Lumen
         float stunTimer, lostSightTimer;
         Material mat;
         Renderer rend;
-        Transform eye;
+        Transform eyeL, eyeR;
         Vector3 lastPos;
         static readonly Color patrolCol = new Color(1f, 0.25f, 0.2f), chaseCol = new Color(1f, 0.75f, 0.1f), stunCol = new Color(0.3f, 0.9f, 1f);
 
@@ -35,16 +35,25 @@ namespace Lumen
             gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
             rend = gameObject.AddComponent<MeshRenderer>();
             rend.sharedMaterial = mat = material;
-            var e = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            Destroy(e.GetComponent<Collider>());
-            e.transform.SetParent(transform, false);
-            e.transform.localPosition = new Vector3(0, 0.1f, 0.85f);
-            e.transform.localScale = Vector3.one * 0.45f;
-            e.GetComponent<Renderer>().sharedMaterial = LumenResources.I.orb;
-            eye = e.transform;
+
+            // Glowing dragon eyes (left and right) on the snout/head
+            eyeL = CreateEye(new Vector3(-0.22f, 0.65f, 1.75f));
+            eyeR = CreateEye(new Vector3( 0.22f, 0.65f, 1.75f));
+
             transform.position = Ground(Bezier.EvaluateChain(chain, u));
             lastPos = transform.position;
             SetColor(patrolCol);
+        }
+
+        Transform CreateEye(Vector3 localPos)
+        {
+            var e = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            Destroy(e.GetComponent<Collider>());
+            e.transform.SetParent(transform, false);
+            e.transform.localPosition = localPos;
+            e.transform.localScale = Vector3.one * 0.24f;
+            e.GetComponent<Renderer>().sharedMaterial = LumenResources.I.orb;
+            return e.transform;
         }
 
         Vector3 Ground(Vector3 p)
@@ -131,8 +140,9 @@ namespace Lumen
             }
 
             transform.position = pos;
-            float bob = Mathf.Sin(Time.time * 3f + u) * 0.12f;
-            eye.localPosition = new Vector3(0, 0.1f + bob, 0.85f);
+            float bob = Mathf.Sin(Time.time * 3f + u) * 0.08f;
+            if (eyeL != null) eyeL.localPosition = new Vector3(-0.22f, 0.65f + bob, 1.75f);
+            if (eyeR != null) eyeR.localPosition = new Vector3( 0.22f, 0.65f + bob, 1.75f);
         }
 
         bool CanSee(Vector3 target)
