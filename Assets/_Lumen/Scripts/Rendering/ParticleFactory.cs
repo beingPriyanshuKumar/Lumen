@@ -98,5 +98,18 @@ namespace Lumen
             ps.Play();
             return ps;
         }
+
+        /// <summary>Cosmic stardust: twinkling motes of star matter drifting around the camera in space.</summary>
+        public static ParticleSystem Stardust(Transform parent)
+        {
+            var ps = Create("SpaceStardust", parent, parent.position);
+            Style(ps, 10f, 0.25f, 0.18f, new Color(0.85f, 0.95f, 1f, 0.9f), new Color(0.5f, 0.7f, 1f, 0.8f), 0f);
+            var main = ps.main; main.maxParticles = 600;
+            var em = ps.emission; em.enabled = true; em.rateOverTime = 60;
+            var sh = ps.shape; sh.enabled = true; sh.shapeType = ParticleSystemShapeType.Sphere; sh.radius = 28f;
+            var noise = ps.noise; noise.enabled = true; noise.strength = 0.25f; noise.frequency = 0.2f;
+            ps.Play();
+            return ps;
+        }
     }
 }

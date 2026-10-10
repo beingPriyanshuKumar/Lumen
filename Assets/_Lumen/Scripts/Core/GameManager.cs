@@ -42,6 +42,7 @@ namespace Lumen
         {
             world.Build(Random.Range(1, 9999));
             ParticleFactory.Dust(orbitCam.transform);
+            ParticleFactory.Stardust(orbitCam.transform);
             BeginIntro();
         }
 
