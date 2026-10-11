@@ -241,5 +241,146 @@ namespace Lumen
             m.RecalculateBounds();
             return m;
         }
+
+        /// <summary>Generates an inward-facing sphere for cosmic space backdrops/sky domes.</summary>
+        public static Mesh InvertedSphere(float radius = 400f, int rings = 20, int segments = 36)
+        {
+            int vertCount = (rings + 1) * (segments + 1);
+            var v = new Vector3[vertCount];
+            var uv = new Vector2[vertCount];
+            var n = new Vector3[vertCount];
+
+            int idx = 0;
+            for (int r = 0; r <= rings; r++)
+            {
+                float vNorm = (float)r / rings;
+                float phi = vNorm * Mathf.PI; // 0 (top) to PI (bottom)
+                float y = Mathf.Cos(phi) * radius;
+                float sinPhi = Mathf.Sin(phi);
+
+                for (int s = 0; s <= segments; s++)
+                {
+                    float uNorm = (float)s / segments;
+                    float theta = uNorm * Mathf.PI * 2f;
+                    float x = Mathf.Sin(theta) * sinPhi * radius;
+                    float z = Mathf.Cos(theta) * sinPhi * radius;
+
+                    Vector3 pos = new Vector3(x, y, z);
+                    v[idx] = pos;
+                    uv[idx] = new Vector2(uNorm, vNorm);
+                    n[idx] = -pos.normalized; // Inward normal
+                    idx++;
+                }
+            }
+
+            var tris = new System.Collections.Generic.List<int>();
+            for (int r = 0; r < rings; r++)
+            {
+                for (int s = 0; s < segments; s++)
+                {
+                    int curr = r * (segments + 1) + s;
+                    int next = curr + segments + 1;
+
+                    // Inward-facing winding order (clockwise from inside)
+                    tris.Add(curr);
+                    tris.Add(curr + 1);
+                    tris.Add(next + 1);
+
+                    tris.Add(curr);
+                    tris.Add(next + 1);
+                    tris.Add(next);
+                }
+            }
+
+            var m = new Mesh
+            {
+                name = "InvertedSphere",
+                vertices = v,
+                normals = n,
+                uv = uv,
+                triangles = tris.ToArray()
+            };
+            m.RecalculateBounds();
+            return m;
+        }
+
+        /// <summary>Generates a procedural celestial starfield containing point quads oriented randomly in the sky.</summary>
+        public static Mesh CelestialStars(int starCount = 1800, float minRadius = 260f, float maxRadius = 380f, int seed = 421)
+        {
+            var rng = new System.Random(seed);
+            var verts = new Vector3[starCount * 4];
+            var uvs = new Vector2[starCount * 4];
+            var cols = new Color[starCount * 4];
+            var tris = new int[starCount * 6];
+
+            Color[] starPalettes =
+            {
+                new Color(1f, 1f, 1f, 0.95f),        // Brilliant white
+                new Color(0.75f, 0.85f, 1f, 0.9f),    // Cool cyan-blue
+                new Color(0.6f, 0.75f, 1f, 0.85f),   // Deep blue
+                new Color(1f, 0.95f, 0.75f, 0.9f),   // Warm solar yellow
+                new Color(1f, 0.75f, 0.9f, 0.85f),   // Soft magenta nebula star
+                new Color(0.5f, 1f, 0.9f, 0.85f)     // Cyan star
+            };
+
+            for (int i = 0; i < starCount; i++)
+            {
+                // Spherical random position
+                float u = (float)rng.NextDouble() * 2f - 1f;
+                float theta = (float)rng.NextDouble() * Mathf.PI * 2f;
+                float s = Mathf.Sqrt(Mathf.Max(0f, 1f - u * u));
+                Vector3 dir = new Vector3(s * Mathf.Cos(theta), u, s * Mathf.Sin(theta)).normalized;
+
+                // Concentrate more stars higher up, but keep full sphere coverage
+                float dist = minRadius + (float)rng.NextDouble() * (maxRadius - minRadius);
+                Vector3 center = dir * dist;
+
+                // Tangent frame for quad billboard oriented towards origin
+                Vector3 up = Vector3.up;
+                if (Mathf.Abs(Vector3.Dot(dir, up)) > 0.95f) up = Vector3.forward;
+                Vector3 right = Vector3.Cross(dir, up).normalized;
+                Vector3 normalUp = Vector3.Cross(right, dir).normalized;
+
+                float starSize = (float)rng.NextDouble() < 0.08f ? 2.8f + (float)rng.NextDouble() * 2.2f : 0.8f + (float)rng.NextDouble() * 1.4f;
+                Color starCol = starPalettes[rng.Next(starPalettes.Length)];
+                float brightness = 0.5f + (float)rng.NextDouble() * 0.5f;
+                starCol *= brightness;
+
+                int vBase = i * 4;
+                verts[vBase + 0] = center - right * starSize - normalUp * starSize;
+                verts[vBase + 1] = center + right * starSize - normalUp * starSize;
+                verts[vBase + 2] = center + right * starSize + normalUp * starSize;
+                verts[vBase + 3] = center - right * starSize + normalUp * starSize;
+
+                uvs[vBase + 0] = new Vector2(0f, 0f);
+                uvs[vBase + 1] = new Vector2(1f, 0f);
+                uvs[vBase + 2] = new Vector2(1f, 1f);
+                uvs[vBase + 3] = new Vector2(0f, 1f);
+
+                cols[vBase + 0] = starCol;
+                cols[vBase + 1] = starCol;
+                cols[vBase + 2] = starCol;
+                cols[vBase + 3] = starCol;
+
+                int tBase = i * 6;
+                tris[tBase + 0] = vBase + 0;
+                tris[tBase + 1] = vBase + 2;
+                tris[tBase + 2] = vBase + 1;
+                tris[tBase + 3] = vBase + 0;
+                tris[tBase + 4] = vBase + 3;
+                tris[tBase + 5] = vBase + 2;
+            }
+
+            var m = new Mesh
+            {
+                name = "CelestialStars",
+                vertices = verts,
+                uv = uvs,
+                colors = cols,
+                triangles = tris
+            };
+            m.RecalculateBounds();
+            return m;
+        }
     }
 }

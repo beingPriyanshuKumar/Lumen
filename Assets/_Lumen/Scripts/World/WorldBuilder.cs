@@ -52,6 +52,25 @@ namespace Lumen
             tgo.AddComponent<MeshCollider>().sharedMesh = TerrainMesh;
             TerrainTf = tgo.transform;
 
+            // ---- outer space celestial starfield & backdrop ----
+            var starsGo = new GameObject("Starfield");
+            starsGo.transform.SetParent(worldRoot, false);
+            starsGo.transform.position = Vector3.zero;
+            starsGo.AddComponent<MeshFilter>().sharedMesh = MeshFactory.CelestialStars(2200, 240f, 380f, seed);
+            var starsRend = starsGo.AddComponent<MeshRenderer>();
+            starsRend.sharedMaterial = res.StarMaterial != null ? res.StarMaterial : res.particle;
+
+            // Optional deep cosmic sky dome
+            var spaceDome = new GameObject("SpaceSkyDome");
+            spaceDome.transform.SetParent(worldRoot, false);
+            spaceDome.transform.position = Vector3.zero;
+            spaceDome.AddComponent<MeshFilter>().sharedMesh = MeshFactory.InvertedSphere(390f, 16, 32);
+            var domeRend = spaceDome.AddComponent<MeshRenderer>();
+            var domeMat = res.NewLit(res.wire);
+            domeMat.SetColor("_BaseColor", new Color(0.015f, 0.008f, 0.035f, 1f));
+            domeMat.SetColor("_EmissionColor", new Color(0.01f, 0.005f, 0.025f, 1f));
+            domeRend.sharedMaterial = domeMat;
+
             // ---- scrolling synthwave floor far below / beyond the arena ----
             var floor = GameObject.CreatePrimitive(PrimitiveType.Plane);
             Destroy(floor.GetComponent<Collider>());

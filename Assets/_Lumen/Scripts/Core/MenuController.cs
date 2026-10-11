@@ -42,6 +42,12 @@ namespace Lumen
             floor.transform.position = new Vector3(0, -2.5f, 0); floor.transform.localScale = new Vector3(40, 1, 40);
             floor.GetComponent<Renderer>().sharedMaterial = LumenResources.I.grid;
             LumenResources.I.grid.SetFloat("_Tiling", 80f);
+
+            // Space starfield backdrop for main menu
+            var starsGo = new GameObject("MenuStarfield");
+            starsGo.AddComponent<MeshFilter>().sharedMesh = MeshFactory.CelestialStars(1200, 100f, 180f, 999);
+            var starsRend = starsGo.AddComponent<MeshRenderer>();
+            starsRend.sharedMaterial = LumenResources.I.StarMaterial != null ? LumenResources.I.StarMaterial : LumenResources.I.particle;
         }
 
         void Update()

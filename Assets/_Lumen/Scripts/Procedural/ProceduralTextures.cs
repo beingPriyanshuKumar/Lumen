@@ -42,5 +42,40 @@ namespace Lumen
             tex.SetPixels32(px); tex.Apply();
             return tex;
         }
+
+        /// <summary>Star flare sprite with cross diffraction spikes and soft glowing nucleus.</summary>
+        public static Texture2D StarFlare(int size = 64)
+        {
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false) { name = "StarFlare", wrapMode = TextureWrapMode.Clamp };
+            var px = new Color32[size * size];
+            float half = (size - 1) * 0.5f;
+            for (int y = 0; y < size; y++)
+            {
+                float dy = (y - half) / half;
+                float absY = Mathf.Abs(dy);
+                for (int x = 0; x < size; x++)
+                {
+                    float dx = (x - half) / half;
+                    float absX = Mathf.Abs(dx);
+                    float r = Mathf.Sqrt(dx * dx + dy * dy);
+
+                    // Soft central glow core
+                    float core = Mathf.Clamp01(1f - r * 1.5f);
+                    core = core * core * core;
+
+                    // 4-point diffraction spike flare
+                    float spikeH = Mathf.Clamp01(1f - absX * 1.1f) * Mathf.Clamp01(1f - absY * 7f);
+                    float spikeV = Mathf.Clamp01(1f - absY * 1.1f) * Mathf.Clamp01(1f - absX * 7f);
+                    float spike = (spikeH + spikeV) * 0.8f;
+
+                    float alpha = Mathf.Clamp01(core + spike);
+                    byte a = (byte)(alpha * 255f);
+                    px[y * size + x] = new Color32(255, 255, 255, a);
+                }
+            }
+            tex.SetPixels32(px);
+            tex.Apply();
+            return tex;
+        }
     }
 }

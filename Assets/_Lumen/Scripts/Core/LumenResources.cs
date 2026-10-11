@@ -16,6 +16,8 @@ namespace Lumen
 
         public Texture2D GridTex { get; private set; }
         public Texture2D DotTex { get; private set; }
+        public Texture2D StarFlareTex { get; private set; }
+        public Material StarMaterial { get; private set; }
         public readonly List<Material> LitMaterials = new List<Material>();
 
         void Awake()
@@ -23,6 +25,7 @@ namespace Lumen
             I = this;
             GridTex = ProceduralTextures.NeonGrid();
             DotTex = ProceduralTextures.SoftDot();
+            StarFlareTex = ProceduralTextures.StarFlare();
 
             terrain = Clone(terrain); orb = Clone(orb); shard = Clone(shard); sentinel = Clone(sentinel);
             portal = Clone(portal); wire = Clone(wire); hue = Clone(hue);
@@ -31,6 +34,13 @@ namespace Lumen
             terrain.SetTexture("_MainTex", GridTex);
             grid.SetTexture("_MainTex", GridTex);
             particle.SetTexture("_MainTex", DotTex);
+
+            if (particle != null)
+            {
+                StarMaterial = new Material(particle) { name = "StarMaterial (runtime)" };
+                StarMaterial.SetTexture("_MainTex", StarFlareTex);
+            }
+
             RegisterLit(terrain); RegisterLit(orb); RegisterLit(shard); RegisterLit(sentinel);
         }
 
